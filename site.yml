@@ -6,25 +6,6 @@
     - setup:
       tags: always
 
-      #    # Ensure you're not missing out on anything
-      #    # Does a local git fetch, and ensures that the origin/master branch is
-      #    # merged into your current branch.  If not, it `fail`s.
-      #    - become: no
-      #      delegate_to: localhost
-      #      tags: always
-      #      check_mode: no
-      #      run_once: true
-      #      block:
-      #        - name: Check current ansible git repo
-      #          local_action: command git fetch origin
-      #          changed_when: False
-      #        - name: Check ansible git repo head
-      #          local_action: command git branch --merged HEAD --remotes --color=never
-      #          changed_when: False
-      #          register: branches_merged_in
-      #        - fail: msg="There are changes on origin/master that you don't have"
-      #          when: "'  origin/master' not in branches_merged_in.stdout_lines"
-
       # Prevent ansible from running on too many hosts at once (max 5)
       # ansible_play_hosts gets dynamically updated, so as hosts 'fail' this
       # will reduce. 'freeze' this variable before `fail`ing
@@ -58,53 +39,59 @@
   tags: common
   roles:
     - role: common
-- hosts: acme
+#- hosts: acme
+#  become: yes
+#  tasks:
+#    - include_role:
+#        name: letsencrypt
+#      tags: [letsencrypt,certificates]
+#- hosts: wordpress
+#  become: yes
+#  tags: wordpress
+#  roles:
+#    - role: 'wordpress'
+#- hosts: osrm
+#  become: yes
+#  tags: osrm
+#  roles:
+#    - role: osrm
+#- hosts: t3dmr
+#  become: yes
+#  roles:
+#    - role: t3dmr
+#- hosts: static
+#  become: yes
+#  tags: static
+#  roles:
+#    - role: static
+#- hosts: overpass
+#  become: yes
+#  tags: overpass
+#  roles:
+#    - role: overpass
+#- hosts: overpass_dev
+#  become: yes
+#  tags: overpass_dev
+#  roles:
+#    - role: overpass_dev
+#- hosts: tile
+#  become: yes
+#  tags: tile
+#  roles:
+#    - role: tile
+#- hosts: osmdata
+#  become: yes
+#  roles:
+#    - role: osmdata
+#- hosts: umap
+#  become: yes
+#  tags: umap
+#  roles:
+#    - role: nginx
+#    - role: umap
+#
+- hosts: atlas
   become: yes
-  tasks:
-    - include_role:
-        name: letsencrypt
-      tags: [letsencrypt,certificates]
-- hosts: wordpress
-  become: yes
-  tags: wordpress
+  tags: atlas
   roles:
-    - role: 'wordpress'
-- hosts: osrm
-  become: yes
-  tags: osrm
-  roles:
-    - role: osrm
-- hosts: t3dmr
-  become: yes
-  roles:
-    - role: t3dmr
-- hosts: static
-  become: yes
-  tags: static
-  roles:
-    - role: static
-- hosts: overpass
-  become: yes
-  tags: overpass
-  roles:
-    - role: overpass
-- hosts: overpass_dev
-  become: yes
-  tags: overpass_dev
-  roles:
-    - role: overpass_dev
-- hosts: tile
-  become: yes
-  tags: tile
-  roles:
-    - role: tile
-- hosts: osmdata
-  become: yes
-  roles:
-    - role: osmdata
-- hosts: umap
-  become: yes
-  tags: umap
-  roles:
-    - role: nginx
-    - role: umap
+    - role: atlas

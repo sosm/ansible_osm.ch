@@ -1,0 +1,14 @@
+- name: Create atlas system account
+  system_account:
+    name: "{{ atlas__user }}"
+    home: "{{ atlas__basedir }}"
+
+- name: Include system dependencies
+  ansible.builtin.include_tasks: system_packages.yml
+
+- name: Include application (clone, systemd unit)
+  ansible.builtin.include_tasks: application.yml
+
+- name: Include data update
+  ansible.builtin.include_tasks: update.yml
+

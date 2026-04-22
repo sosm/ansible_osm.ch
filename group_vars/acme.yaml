@@ -1,4 +1,4 @@
-acme__fqdn: acme.openstreetmap.de
+acme__fqdn: acme.osm.ch
 acme__user: acme
 acme__basedir: /srv/acme
 acme__debug_mode: false

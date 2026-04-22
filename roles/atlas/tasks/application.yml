@@ -1,0 +1,60 @@
+- name: Clone/copy stop_sync_osm_atlas code
+  ansible.builtin.git:
+    repo: "{{ atlas__repo }}"
+    dest: "{{ atlas__basedir }}/stop_sync_osm_atlas"
+    version: "{{ atlas__version | default('main') }}"
+  become: true
+  become_user: "{{ atlas__user }}"
+  notify: atlas flask db upgrade
+
+- name: Set up postgresql user
+  postgresql_user:
+    name: "{{ atlas__user }}"
+  become_user: postgres
+
+- name: Set up postgresql database
+  postgresql_db:
+    name: "{{ atlas__dbname }}"
+    owner: "{{ atlas__user }}"
+  become_user: postgres
+
+- name: Set up postgis extension on db {{ atlas__dbname }}
+  postgresql_ext:
+    name: postgis
+    login_db: "{{ atlas__dbname }}"
+  become_user: postgres
+
+
+
+- name: gunicorn server
+  systemd_service:
+    name: atlas_gunicorn
+    enabled: true
+    state: started
+    service:
+      Unit:
+        Description: Gunicorn instance for atlas stop comparison
+      Service:
+        Type: simple
+        ExecStart: "gunicorn -w 2 -b localhost:{{ atlas__gunicorn_port }} --pythonpath \"{{ atlas__basedir }}/stop_sync_osm_atlas/\" backend.app:app"
+        User: "{{ atlas__user }}"
+        Group: "{{ atlas__user }}"
+        WorkingDirectory: "{{ atlas__basedir }}"
+        Environment: "DATABASE_URI=\"postgresql+psycopg://atlas@/atlas\""
+
+# apache http server conf
+- name: apache enable module
+  apache_module:
+    name: "{{ item }}"
+  loop:
+    - proxy_http
+    - headers
+    - md
+
+- name: apache site for atlas
+  apache_site:
+    site: atlas
+    src: atlas_site.apache.jinja
+  notify: reload apache2
+
+
