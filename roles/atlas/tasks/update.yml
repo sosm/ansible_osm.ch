@@ -10,7 +10,7 @@
         Description: Update comparison OSM and Atlas
       Service:
         Type: simple
-        ExecStart: "python3 -m matching_and_import_db.scheduler.job_runner"
+        ExecStart: "{{ atlas__basedir }}/venv/bin/python3 -m matching_and_import_db.scheduler.job_runner"
         User: "{{ atlas__user }}"
         Group: "{{ atlas__user }}"
         WorkingDirectory: "{{ atlas__basedir }}/stop_sync_osm_atlas"

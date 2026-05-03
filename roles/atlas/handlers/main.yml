@@ -2,8 +2,10 @@
 # flask db upgrade, migration
 # Run Flask db upgrade for stop_sync_osm_atlas db "{{ atlas__dbname }}"
 - name: atlas flask db upgrade
-  command: flask --app backend/app.py db upgrade
+  command: "{{ atlas__basedir }}/venv/bin/flask --app backend/app.py db upgrade"
   args:
     chdir: "{{ atlas__basedir }}/stop_sync_osm_atlas"
   become: true
   become_user: "{{ atlas__user }}"
+  environment:
+    DATABASE_URI: "postgresql+psycopg://atlas@/atlas"

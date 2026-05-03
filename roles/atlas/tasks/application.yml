@@ -1,4 +1,4 @@
-- name: Clone/copy stop_sync_osm_atlas code
+- name: Clone stop_sync_osm_atlas code
   ansible.builtin.git:
     repo: "{{ atlas__repo }}"
     dest: "{{ atlas__basedir }}/stop_sync_osm_atlas"
@@ -24,6 +24,26 @@
     login_db: "{{ atlas__dbname }}"
   become_user: postgres
 
+- name: Set up virtualenv base
+  pip:
+    requirements: "{{ atlas__basedir }}/stop_sync_osm_atlas/requirements-base.txt"
+    virtualenv: "{{ atlas__basedir }}/venv"
+    virtualenv_python: python3
+  become_user: "{{ atlas__user }}"
+
+#- name: Set up virtualenv requirements for scheduler
+#  pip:
+#    requirements: "{{ atlas__basedir }}/stop_sync_osm_atlas/requirements-scheduler.txt"
+#    virtualenv: "{{ atlas__basedir }}/venv"
+#    virtualenv_python: python3
+#  become_user: "{{ atlas__user }}"
+
+- name: Set up virtualenv requirements for web
+  pip:
+    requirements: "{{ atlas__basedir }}/stop_sync_osm_atlas/requirements-web.txt"
+    virtualenv: "{{ atlas__basedir }}/venv"
+    virtualenv_python: python3
+  become_user: "{{ atlas__user }}"
 
 
 - name: gunicorn server
@@ -36,11 +56,12 @@
         Description: Gunicorn instance for atlas stop comparison
       Service:
         Type: simple
-        ExecStart: "gunicorn -w 2 -b localhost:{{ atlas__gunicorn_port }} --pythonpath \"{{ atlas__basedir }}/stop_sync_osm_atlas/\" backend.app:app"
+        Environment: "PATH=\"{{ atlas__basedir }}/venv/bin:/usr/local/bin:/usr/bin:/bin\" DATABASE_URI=\"postgresql+psycopg://atlas@/atlas\""
+        ExecStart: "{{ atlas__basedir }}/venv/bin/gunicorn -w 2 -b localhost:{{ atlas__gunicorn_port }} --pythonpath \"{{ atlas__basedir }}/stop_sync_osm_atlas/\" backend.app:app"
         User: "{{ atlas__user }}"
         Group: "{{ atlas__user }}"
         WorkingDirectory: "{{ atlas__basedir }}"
-        Environment: "DATABASE_URI=\"postgresql+psycopg://atlas@/atlas\""
+        ExecReload: "/bin/kill -s HUP $MAINPID"
 
 # apache http server conf
 - name: apache enable module

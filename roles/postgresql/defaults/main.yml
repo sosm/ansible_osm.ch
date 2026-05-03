@@ -3,9 +3,12 @@ postgresql__version: |-
       {
         '11': 13,
         '12': 15,
-        '13': 17
+        '13': 17,
+        '22': 14
       }[ansible_distribution_major_version]
   }}
+
+#22: ubuntu
 
 postgresql__postgis_version: 3
 
