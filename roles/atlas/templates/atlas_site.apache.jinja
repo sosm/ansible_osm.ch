@@ -1,0 +1,46 @@
+MDomain atlas.osm.ch  atlas.{{ ansible_hostname }}.osm.ch
+<VirtualHost *:80>
+    ServerAdmin tech@sosm.ch
+    ServerName atlas.osm.ch
+    ServerAlias atlas.nalps.osm.ch
+
+        CustomLog /var/log/apache2/atlas-access.log "%t runtime: %T, return siz>
+
+        DocumentRoot /srv/atlas/site
+
+        Redirect permanent / https://atlas.osm.ch/
+
+        ErrorLog /var/log/apache2/atlas-error.log
+</VirtualHost>
+<VirtualHost *:443>
+
+    ServerAdmin tech@sosm.ch
+    ServerName atlas.osm.ch
+    ServerAlias atlas.{{ ansible_hostname }}.osm.ch
+
+    SSLEngine on
+
+        CustomLog /var/log/apache2/atlas-access.log "%t runtime: %T, return size: %B, %{plainsize}n, status: %>s, remote host: %h, completed: %X, query string: %U%q, referer: %{Referer}i, user agent: %{User-agent}i"
+
+        DocumentRoot {{ atlas__basedir }}/site
+        <Directory />
+                Options FollowSymLinks
+                AllowOverride None
+        </Directory>
+        <Directory "{{ atlas__basedir }}/site" >
+                Options Indexes FollowSymLinks MultiViews
+                AllowOverride None
+
+                Require all granted
+        </Directory>
+
+        ProxyRequests Off
+        RequestHeader set X-Forwarded-Proto "https"
+        ProxyPass / http://localhost:{{ atlas__gunicorn_port }}/
+        ProxyPassReverse / http://localhost:{{ atlas__gunicorn_port }}/
+        ProxyPreserveHost On
+
+        ErrorLog /var/log/apache2/atlas-error.log
+</VirtualHost>
+
+

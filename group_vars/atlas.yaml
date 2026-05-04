@@ -1,0 +1,8 @@
+atlas__user: atlas
+
+atlas__basedir: /srv/atlas
+atlas__repo: https://github.com/openTdataCH/stop_sync_osm_atlas.git
+
+atlas__dbname: atlas
+atlas__gunicorn_port: 5001
+
