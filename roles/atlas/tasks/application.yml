@@ -17,12 +17,14 @@
     name: "{{ atlas__dbname }}"
     owner: "{{ atlas__user }}"
   become_user: postgres
+  notify: atlas flask db upgrade
 
 - name: Set up postgis extension on db {{ atlas__dbname }}
   postgresql_ext:
     name: postgis
     login_db: "{{ atlas__dbname }}"
   become_user: postgres
+  notify: atlas flask db upgrade
 
 - name: Set up virtualenv base
   pip:
