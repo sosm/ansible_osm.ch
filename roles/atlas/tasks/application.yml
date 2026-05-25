@@ -30,15 +30,15 @@
   pip:
     requirements: "{{ atlas__basedir }}/stop_sync_osm_atlas/requirements-base.txt"
     virtualenv: "{{ atlas__basedir }}/venv"
-    virtualenv_python: python3
+    virtualenv_python: python3.11
   become_user: "{{ atlas__user }}"
 
-#- name: Set up virtualenv requirements for scheduler
-#  pip:
-#    requirements: "{{ atlas__basedir }}/stop_sync_osm_atlas/requirements-scheduler.txt"
-#    virtualenv: "{{ atlas__basedir }}/venv"
-#    virtualenv_python: python3
-#  become_user: "{{ atlas__user }}"
+- name: Set up virtualenv requirements for scheduler
+  pip:
+    requirements: "{{ atlas__basedir }}/stop_sync_osm_atlas/requirements-scheduler.txt"
+    virtualenv: "{{ atlas__basedir }}/venv"
+    virtualenv_python: python3
+  become_user: "{{ atlas__user }}"
 
 - name: Set up virtualenv requirements for web
   pip:
