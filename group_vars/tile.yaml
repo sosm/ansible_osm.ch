@@ -22,13 +22,9 @@ tile__planet: '{{ tile__basedir }}/planet.osm.pbf'
 
 
 tile__acme_certificates:
-  - name: tilede
+  - name: tilech
     domains:
-      - tile.openstreetmap.de
-      - a.tile.openstreetmap.de
-      - b.tile.openstreetmap.de
-      - c.tile.openstreetmap.de
-      - d.tile.openstreetmap.de
+      - tile.osm.ch
     on_update:
       - systemctl reload apache2
   - name: munin
