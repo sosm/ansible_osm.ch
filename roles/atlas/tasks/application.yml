@@ -7,6 +7,24 @@
   become_user: "{{ atlas__user }}"
   notify: atlas flask db upgrade
 
+- name: Read engine.ref from the stop_sync_osm_atlas repository
+  ansible.builtin.slurp:
+    src: "{{ atlas__basedir }}/stop_sync_osm_atlas/engine.ref"
+  register: engine_ref_raw
+
+- name: Derive the git version (strip trailing newline/whitespace)
+  ansible.builtin.set_fact:
+    engine_git_ref: "{{ (engine_ref_raw.content | b64decode) | trim }}"
+
+- name: Clone engine code
+  ansible.builtin.git:
+    repo: https://github.com/openTdataCH/osm-public-transport-matcher.git
+    dest: "{{ atlas__basedir }}/stop_sync_osm_atlas/engine"
+    version: "{{ engine_git_ref }}"
+  become: true
+  become_user: "{{ atlas__user }}"
+  notify: atlas flask db upgrade
+
 - name: Set up postgresql user
   postgresql_user:
     name: "{{ atlas__user }}"
@@ -28,25 +46,10 @@
 
 - name: Set up virtualenv base
   pip:
-    requirements: "{{ atlas__basedir }}/stop_sync_osm_atlas/requirements-base.txt"
+    requirements: "{{ atlas__basedir }}/stop_sync_osm_atlas/requirements.txt"
     virtualenv: "{{ atlas__basedir }}/venv"
-    virtualenv_python: python3.11
+    virtualenv_python: python3.13
   become_user: "{{ atlas__user }}"
-
-- name: Set up virtualenv requirements for scheduler
-  pip:
-    requirements: "{{ atlas__basedir }}/stop_sync_osm_atlas/requirements-scheduler.txt"
-    virtualenv: "{{ atlas__basedir }}/venv"
-    virtualenv_python: python3
-  become_user: "{{ atlas__user }}"
-
-- name: Set up virtualenv requirements for web
-  pip:
-    requirements: "{{ atlas__basedir }}/stop_sync_osm_atlas/requirements-web.txt"
-    virtualenv: "{{ atlas__basedir }}/venv"
-    virtualenv_python: python3
-  become_user: "{{ atlas__user }}"
-
 
 - name: gunicorn server
   systemd_service:
