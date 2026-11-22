@@ -7,7 +7,7 @@
     name: "{{ acme__user }}"
     home: "{{ acme__basedir }}"
 
-- name: Set up working directories {{item}}
+- name: Set up working directories
   file:
     path: "{{acme__basedir}}/{{item}}"
     state: directory
@@ -35,12 +35,12 @@
     name: nginx
   when: "acme__webserver == 'nginx'"
 
-- name: Set up nginx site
-  nginx_site:
-    site: acme
-    src: "nginx-acme-server.conf.jinja"
-  notify: reload nginx
-  when: "acme__webserver == 'nginx'"
+#- name: Set up nginx site
+#  nginx_site:
+#    site: acme
+#    src: "nginx-acme-server.conf.jinja"
+#  notify: reload nginx
+#  when: "acme__webserver == 'nginx'"
 
 - name: Setup apache
   include_role:

@@ -2,4 +2,4 @@ acme__fqdn: acme.osm.ch
 acme__user: acme
 acme__basedir: /srv/acme
 acme__debug_mode: false
-acme__webserver: apache
+acme__webserver: apache2

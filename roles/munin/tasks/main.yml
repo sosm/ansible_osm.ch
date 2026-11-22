@@ -2,6 +2,10 @@
   set_fact:
     munin__in_use: yes
 
+- name: which web server
+  debug:
+    msg: "webserver__in_use: {{ webserver__in_use }}"
+
 - name: Install munin
   apt:
     name:
@@ -50,11 +54,11 @@
   notify: reload apache2
   when: "webserver__in_use == 'apache2'"
 
-- name: Set up the default munin site in nginx
-  nginx_site:
-    site: 'munin'
-    src: 'munin.nginx-default.jinja'
-  vars:
-    acme_munin_domain: "{{ munin__hostname }}"
-  notify: reload nginx
-  when: "webserver__in_use == 'nginx'"
+#- name: Set up the default munin site in nginx
+#  nginx_site:
+#    site: 'munin'
+#    src: 'munin.nginx-default.jinja'
+#  vars:
+#    acme_munin_domain: "{{ munin__hostname }}"
+#  notify: reload nginx
+#  when: "webserver__in_use == 'nginx'"

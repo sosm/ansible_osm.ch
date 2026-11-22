@@ -24,7 +24,7 @@ tile__planet: '{{ tile__basedir }}/planet.osm.pbf'
 tile__acme_certificates:
   - name: tilech
     domains:
-      - tile.osm.ch
+      - tile.macun.osm.ch
     on_update:
       - systemctl reload apache2
   - name: munin

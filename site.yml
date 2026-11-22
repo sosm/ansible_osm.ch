@@ -39,12 +39,12 @@
   tags: common
   roles:
     - role: common
-#- hosts: acme
-#  become: yes
-#  tasks:
-#    - include_role:
-#        name: letsencrypt
-#      tags: [letsencrypt,certificates]
+- hosts: acme
+  become: yes
+  tasks:
+    - include_role:
+        name: letsencrypt
+      tags: [letsencrypt,certificates]
 #- hosts: wordpress
 #  become: yes
 #  tags: wordpress
@@ -74,11 +74,11 @@
 #  tags: overpass_dev
 #  roles:
 #    - role: overpass_dev
-#- hosts: tile
-#  become: yes
-#  tags: tile
-#  roles:
-#    - role: tile
+- hosts: tile
+  become: yes
+  tags: tile
+  roles:
+    - role: tile
 #- hosts: osmdata
 #  become: yes
 #  roles:
