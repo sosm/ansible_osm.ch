@@ -16,10 +16,10 @@
   ansible.builtin.set_fact:
     engine_git_ref: "{{ (engine_ref_raw.content | b64decode) | trim }}"
 
-- name: Clone engine code
+- name: Clone engine code {{ engine_git_ref[:8] }}
   ansible.builtin.git:
     repo: https://github.com/openTdataCH/osm-public-transport-matcher.git
-    dest: "{{ atlas__basedir }}/stop_sync_osm_atlas/engine"
+    dest: "{{ atlas__basedir }}/osm-public-transport-matcher"
     version: "{{ engine_git_ref }}"
   become: true
   become_user: "{{ atlas__user }}"
@@ -49,6 +49,15 @@
     requirements: "{{ atlas__basedir }}/stop_sync_osm_atlas/requirements.txt"
     virtualenv: "{{ atlas__basedir }}/venv"
     virtualenv_python: python3.13
+  become_user: "{{ atlas__user }}"
+
+- name: Set up virtualenv matcher
+  pip:
+    name: "{{ atlas__basedir }}/osm-public-transport-matcher[swiss,acquisition]"
+    virtualenv: "{{ atlas__basedir }}/venv"
+    virtualenv_python: python3.13
+    editable: true
+    chdir: "{{ atlas__basedir }}/stop_sync_osm_atlas"
   become_user: "{{ atlas__user }}"
 
 - name: gunicorn server
