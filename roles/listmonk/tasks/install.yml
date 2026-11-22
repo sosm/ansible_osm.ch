@@ -1,0 +1,104 @@
+---
+- name: Set up postgresl user
+  postgresql_user:
+      name: "{{ listmonk__db_user }}"
+      password: "{{ listmonk__db_password }}"
+  become_user: postgres
+
+- name: Create PostgreSQL database
+  become_user: postgres
+  community.postgresql.postgresql_db:
+      name: "{{ listmonk__db_name }}"
+      owner: "{{ listmonk__db_user }}"
+
+- name: Create system user for Listmonk
+  ansible.builtin.user:
+      name: "{{ listmonk__user }}"
+      system: true
+      create_home: false
+
+- name: Ensure installation directory exists
+  ansible.builtin.file:
+      path: "{{ listmonk__install_dir }}"
+      state: directory
+      owner: "{{ listmonk__user }}"
+      group: "{{ listmonk__user }}"
+      mode: "0755"
+
+- name: Download and extract Listmonk binary
+  ansible.builtin.unarchive:
+      src: "https://github.com/knadh/listmonk/releases/download/v{{ listmonk__version }}/listmonk_{{ listmonk__version }}_linux_amd64.tar.gz"
+      dest: "{{ listmonk__install_dir }}"
+      remote_src: true
+      owner: "{{ listmonk__user }}"
+      group: "{{ listmonk__user }}"
+      creates: "{{ listmonk__install_dir }}/listmonk"
+
+- name: Ensure Listmonk binary is executable
+  ansible.builtin.file:
+      path: "{{ listmonk__install_dir }}/listmonk"
+      mode: "0755"
+
+- name: Deploy config.toml
+  ansible.builtin.template:
+      src: templates/config.toml.j2
+      dest: "{{ listmonk__install_dir }}/config.toml"
+      owner: "{{ listmonk__user }}"
+      group: "{{ listmonk__user }}"
+      mode: "0600"
+  register: config_file
+
+- name: Check if Listmonk database is already initialized
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_query:
+      db: "{{ listmonk__db_name }}"
+      query: "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'subscribers');"
+  register: listmonk_db_check
+
+- name: Initialize Listmonk Database (First install only)
+  become: true
+  become_user: "{{ listmonk__user }}"
+  ansible.builtin.command:
+      cmd: "./listmonk --install --yes --config config.toml"
+      chdir: "{{ listmonk__install_dir }}"
+  vars:
+      ansible_remote_tmp: /tmp
+  when: not listmonk_db_check.query_result[0].exists
+
+- name: Upgrade Listmonk Database (On updates)
+  become: true
+  become_user: "{{ listmonk__user }}"
+  ansible.builtin.command:
+      cmd: "./listmonk --upgrade --yes --config config.toml"
+      chdir: "{{ listmonk__install_dir }}"
+  vars:
+      ansible_remote_tmp: /tmp
+  when: listmonk_db_check.query_result[0].exists
+
+- name: Deploy systemd service unit
+  ansible.builtin.template:
+      src: templates/listmonk.service.j2
+      dest: "/etc/systemd/system/listmonk.service"
+      mode: "0644"
+  register: systemd_service
+
+- name: Reload systemd, enable and start Listmonk
+  ansible.builtin.systemd:
+      name: listmonk
+      state: restarted
+      enabled: true
+      daemon_reload: true
+  when: systemd_service.changed or config_file.changed
+
+- name: Ensure Listmonk service is running
+  ansible.builtin.systemd:
+      name: listmonk
+      state: started
+      enabled: true
+
+- name: Set up nginx site
+  nginx_site:
+      site: newsletter.weeklyosm.eu
+      src: newsletter.weeklyosm.eu.conf.j2
+  notify: reload nginx

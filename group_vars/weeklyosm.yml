@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: MIT
+---
+weeklyosm:
+    hostname: "weeklyosm.eu"
+    hostname_aliases:
+        - "www.weeklyosm.eu"
+        - "aitov.openstreetmap.de"
+    hostnames:
+        - "weeklyosm.eu"
+        - "newsletter.weeklyosm.eu"
+        - "aitov.openstreetmap.de"
+
+weeklyosm__acme_certificates:
+    - name: hugo
+      domains:
+          - weeklyosm.eu
+          - www.weeklyosm.eu
+          - newsletter.weeklyosm.eu
+    - name: osmbc
+      domains:
+          - osmbc2.openstreetmap.de
+          - mattermost.openstreetmap.de
+      on_update:
+          - systemctl reload nginx

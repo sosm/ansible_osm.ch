@@ -11,9 +11,9 @@ map $http_accept_language $lang {
     ~zh zh;
 }
 
-{{ block_map() }}
-
 {% call server([server_name], http='yes', https=cert, listen_params=default_server ) %}
+
+    {{ error_out_blocked() }}
 
     root {{ root }};
 
@@ -34,7 +34,6 @@ map $http_accept_language $lang {
         # First attempt to serve request as file, then
         # as directory, then fall back to displaying a 404.
         try_files $uri $uri/ =404;
-        {{ error_out_blocked() }}
     }
 
     location /nginx_status {
@@ -60,15 +59,17 @@ map $http_accept_language $lang {
     }
 
 {% if answer_routes %}
-    limit_req_status 429;
 
     access_log /var/log/nginx/router.log anonymized;
 
+    limit_req_status 429;
+    limit_req zone=standard burst=10 delay=9;
+    limit_req zone=table burst=1;
+    limit_req zone=tile burst=50 delay=40;
+    limit_req zone=ua burst=50 nodelay;
+
 {% for profile in osrm__profiles.keys() %}
     location /routed-{{ profile }} {
-        limit_req zone=standard burst=10;
-        limit_req zone=table burst=1;
-        limit_req zone=tile burst=50;
         rewrite_by_lua_file /etc/nginx/lua/{{ profile }}rewrite.lua;
     }
 {% endfor %}

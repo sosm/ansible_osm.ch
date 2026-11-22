@@ -137,21 +137,21 @@ osrm__profilearea:
       area: europe asia
       port: 3332
       profile: "bike"
-      mem: "-m 1"
+      mem: ""
     bikeafoce:
       host: "goode"
       poly: "{{ osrm_polyafoce }}"
       area: africa oceania
       port: 3333
       profile: "bike"
-      mem: "-m 1"
+      mem: ""
     bikeam:
       host: "goode"
       poly: "{{ osrm_polyam }}"
       area: americas
       port: 3334
       profile: "bike"
-      mem: "-m 1"
+      mem: ""
     footeuasi:
       host: "goode"
       poly: "{{ osrm_polyeuasi }}"
@@ -195,7 +195,7 @@ osrm__acme_certificates:
     domains:
       - "{{ munin__hostname | regex_replace(':.*', '') }}"
     on_update:
-      - systemctl reload apache2
+      - systemctl reload nginx
 
 icinga2customcheck__addon:
  - check_connections

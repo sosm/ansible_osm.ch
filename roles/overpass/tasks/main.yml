@@ -14,6 +14,7 @@
     - diffs
     - db
     - src
+    - munin
 
 - name: Install Overpass
   import_tasks: install.yml
@@ -27,7 +28,7 @@
     content: "{{ ansible_host }}"
     mode: "0644"
 
-- name: "Install maintenance script '{{ item }}'"
+- name: "Install maintenance scripts"
   template:
     src: "{{ item }}.jinja"
     dest: "/usr/local/bin/{{ item }}"
@@ -46,26 +47,38 @@
     owner: "{{ overpass__user }}"
     group: "{{ overpass__user }}"
 
-- name: Enable Apache CGI module
-  apache_module:
-    name: cgi
-  notify: reload apache2
+- name: Install fcgiwrap
+  apt:
+    name: fcgiwrap
 
-- name: Enable Apache CGI module
-  apache_module:
-    name: reqtimeout
-  notify: reload apache2
+- name: Systemd service for fcgiwrap
+  systemd_service:
+    name: overpass-fcgiwrap
+    enabled: true
+    state: started
+    service:
+      Unit:
+        Description: FastCGI wrapper for Overpass API
+        Requires: overpass-fcgiwrap.socket
+        After: overpass-fcgiwrap.socket
+      Service:
+        ExecStart: "/usr/sbin/fcgiwrap -f -c {{ overpass__fcgiwrap_workers }}"
+        User: www-data
+        Group: www-data
+        TasksMax: 15000
+      Install:
+        WantedBy: multi-user.target
+    socket:
+      ListenStream: "{{ overpass__basedir }}/run/fcgiwrap.socket"
+      SocketUser: www-data
+      SocketGroup: www-data
+      SocketMode: "0660"
 
-- name: Set mpm_event configuration
-  ansible.builtin.template:
-    src: overpass_mpm_event.apache.jinja
-    dest: /etc/apache2/mods-available/mpm_event.conf
-
-- name: Enable apache site
-  apache_site:
+- name: Enable nginx site
+  nginx_site:
     site: 000-overpass
-    src: overpass_site.apache.jinja
-  notify: reload apache2
+    src: overpass_site.nginx.jinja
+  notify: reload nginx
 
 - ansible.posix.sysctl:
     name: net.netfilter.nf_conntrack_tcp_timeout_established
@@ -198,7 +211,7 @@
     service:
       Unit:
         Description: Overpass Area Processor
-        After: overpass-area-dispatcher.service overpass-update.service
+        After: overpass-area-dispatcher.service overpass-update-apply.service
       Service:
         WorkingDirectory: "{{ overpass__basedir }}"
         ExecStart: "{{ overpass__basedir }}/bin/osm3s_query --progress --rules"
@@ -230,3 +243,19 @@
     minute: "0"
     hour: "3"
     job: "/srv/overpass/bin/clone.sh https://bessel.openstreetmap.de/clone/" 
+
+- name: Install banning mechanisms for Overpass
+  import_tasks: banning.yml
+
+- name: Install munin plugin for nginx status codes
+  ansible.builtin.template:
+    src: "munin-nginx_http_status.jinja"
+    dest: "{{ overpass__basedir }}/munin/nginx_http_status"
+    mode: 0755
+
+- name: Enable munin plugin for nginx status codes
+  munin_plugin:
+    name: "nginx_http_status"
+    src: "{{ overpass__basedir }}/munin/nginx_http_status"
+    config:
+      user: "www-data"

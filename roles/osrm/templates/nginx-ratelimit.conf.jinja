@@ -1,4 +1,14 @@
 
+map $http_user_agent $blocked_user_agent {
+    default 0;
+    include /etc/nginx/blocked_user_agent.conf;
+}
+
+map $http_referer $blocked_referrer {
+    default 0;
+    include /etc/nginx/blocked_referrer.conf;
+}
+
 map $uri $limit_type {
     default       0;
     ~/route/v1/   1;
@@ -29,4 +39,19 @@ map $limit_type $limit_tile {
 limit_req_zone $limit_route zone=standard:50m rate=1r/s;
 limit_req_zone $limit_table zone=table:50m rate=6r/m;
 limit_req_zone $limit_tile zone=tile:5m rate=2r/s;
+
+
+map $http_referrer $foreign_referrer {
+  default           $http_referrer;
+  ~^http://routing.openstreetmap.de/ "";
+  ~^https://routing.openstreetmap.de/ "";
+  ~^https://www.openstreetmap.org "";
+}
+
+map $http_user_agent $ua_referrer_block {
+  default           $http_user_agent;
+  ~^Mozilla         $foreign_referrer;
+}
+
+limit_req_zone $ua_referrer_block zone=ua:1m rate=3r/s;
 

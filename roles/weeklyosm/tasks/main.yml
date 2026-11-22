@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: MIT
+---
+- name: Create deploy user and directories
+  include_tasks: hugopermissions.yml
+  tags: weeklyosm
+
+- name: Set up Remark42 comment service
+  include_tasks: commentsystem.yml
+  tags: weeklyosm
+
+- name: Set up nginx site
+  nginx_site:
+      site: weeklyosm.eu
+      src: hugo.weeklyosm.eu.conf.j2
+  vars:
+      # exclude newsletter subdomain which routes to listmonk
+      hugo_hostnames: "{{ weeklyosm.hostnames | reject('equalto', 'newsletter.weeklyosm.eu') | list }}"
+  notify: reload nginx
+  tags: weeklyosm
+
+- name: Set up backup jobs
+  include_tasks: backup.yml
+  tags: weeklyosm
