@@ -2,5 +2,9 @@
     ServerName {{ acme__fqdn }}
 
     DocumentRoot {{ acme__basedir }}/site
+    <Directory {{ acme__basedir }}/site>
+        Require all granted
+        Options None
+    </Directory>
 
 </VirtualHost>

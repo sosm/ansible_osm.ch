@@ -1,24 +1,4 @@
-MDomain atlas.osm.ch  atlas.{{ ansible_hostname }}.osm.ch
-<VirtualHost *:80>
-    ServerAdmin tech@sosm.ch
-    ServerName atlas.osm.ch
-    ServerAlias atlas.nalps.osm.ch www.atlas.osm.ch
-
-        CustomLog /var/log/apache2/atlas-access.log "%t runtime: %T, return siz>
-
-        DocumentRoot /srv/atlas/site
-
-        Redirect permanent / https://atlas.osm.ch/
-
-        ErrorLog /var/log/apache2/atlas-error.log
-</VirtualHost>
-<VirtualHost *:443>
-
-    ServerAdmin tech@sosm.ch
-    ServerName atlas.osm.ch
-    ServerAlias atlas.{{ ansible_hostname }}.osm.ch
-
-    SSLEngine on
+{% call server(atlas__acme_certificates[0].domains, http='forward', https='atlas') %}
 
         CustomLog /var/log/apache2/atlas-access.log "%t runtime: %T, return size: %B, %{plainsize}n, status: %>s, remote host: %h, completed: %X, query string: %U%q, referer: %{Referer}i, user agent: %{User-agent}i"
 
@@ -41,6 +21,6 @@ MDomain atlas.osm.ch  atlas.{{ ansible_hostname }}.osm.ch
         ProxyPreserveHost On
 
         ErrorLog /var/log/apache2/atlas-error.log
-</VirtualHost>
 
+{% endcall %}
 
