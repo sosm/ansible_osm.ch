@@ -5,7 +5,9 @@
     version: "{{ atlas__version | default('main') }}"
   become: true
   become_user: "{{ atlas__user }}"
-  notify: atlas flask db upgrade
+  notify:
+    - atlas flask db upgrade
+    - restart atlas gunicorn
 
 - name: Read engine.ref from the stop_sync_osm_atlas repository
   ansible.builtin.slurp:
@@ -23,7 +25,6 @@
     version: "{{ engine_git_ref }}"
   become: true
   become_user: "{{ atlas__user }}"
-  notify: atlas flask db upgrade
 
 - name: Set up postgresql user
   postgresql_user:
@@ -35,14 +36,18 @@
     name: "{{ atlas__dbname }}"
     owner: "{{ atlas__user }}"
   become_user: postgres
-  notify: atlas flask db upgrade
+  notify:
+    - atlas flask db upgrade
+    - restart atlas gunicorn
 
 - name: Set up postgis extension on db {{ atlas__dbname }}
   postgresql_ext:
     name: postgis
     login_db: "{{ atlas__dbname }}"
   become_user: postgres
-  notify: atlas flask db upgrade
+  notify:
+    - atlas flask db upgrade
+    - restart atlas gunicorn
 
 - name: Set up virtualenv base
   pip:
@@ -70,11 +75,11 @@
         Description: Gunicorn instance for atlas stop comparison
       Service:
         Type: simple
-        Environment: "PATH=\"{{ atlas__basedir }}/venv/bin:/usr/local/bin:/usr/bin:/bin\" DATABASE_URI=\"postgresql+psycopg://atlas@/atlas\""
+        Environment: "PATH=\"{{ atlas__basedir }}/venv/bin:/usr/local/bin:/usr/bin:/bin\" DATABASE_URI=\"postgresql+psycopg://atlas@/atlas\" PIPELINE_SCHEDULE_INTERVAL_HOURS=2"
         ExecStart: "{{ atlas__basedir }}/venv/bin/gunicorn -w 2 -b localhost:{{ atlas__gunicorn_port }} --pythonpath \"{{ atlas__basedir }}/stop_sync_osm_atlas/\" backend.app:app"
         User: "{{ atlas__user }}"
         Group: "{{ atlas__user }}"
-        WorkingDirectory: "{{ atlas__basedir }}"
+        WorkingDirectory: "{{ atlas__basedir }}/stop_sync_osm_atlas"
         ExecReload: "/bin/kill -s HUP $MAINPID"
 
 # apache http server conf

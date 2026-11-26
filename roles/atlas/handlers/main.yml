@@ -9,3 +9,8 @@
   become_user: "{{ atlas__user }}"
   environment:
     DATABASE_URI: "postgresql+psycopg://atlas@/atlas"
+
+- name: restart atlas gunicorn
+  systemd:
+    name: atlas_gunicorn
+    state: restarted

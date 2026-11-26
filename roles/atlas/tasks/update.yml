@@ -10,13 +10,12 @@
         Description: Update comparison OSM and Atlas
       Service:
         Type: simple
-        ExecStart: "{{ atlas__basedir }}/venv/bin/python3 -m backend.jobs.job_runner"
+        ExecStart: "{{ atlas__basedir }}/venv/bin/python3 -m backend.jobs.job_runner --trigger scheduled"
         User: "{{ atlas__user }}"
         Group: "{{ atlas__user }}"
         WorkingDirectory: "{{ atlas__basedir }}/stop_sync_osm_atlas"
         Environment: "DATABASE_URI=\"postgresql+psycopg://atlas@/atlas\""
     timer:
-      OnAtvieSec: 0s
-      OnCalendar: "*-*-* *:0/2:00"
-      RandomizedDelaySec: 3600
+      OnActiveSec: 0s
+      OnCalendar: "*-*-* 0/2:16:00"
       Persistent: true
